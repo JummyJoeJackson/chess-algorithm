@@ -184,8 +184,8 @@ function getValidMoves(row, col) {
     });
 }
 
-// Get pseudo-legal moves
-function getPseudoLegalMoves(row, col) {
+// Get pseudo-legal moves (now with flag to prevent recursion)
+function getPseudoLegalMoves(row, col, includeCastling = true) {
     const piece = board[row][col];
     if (!piece) return [];
     
@@ -195,7 +195,7 @@ function getPseudoLegalMoves(row, col) {
         case 'knight': return getKnightMoves(row, col, piece.color);
         case 'bishop': return getBishopMoves(row, col, piece.color);
         case 'queen': return getQueenMoves(row, col, piece.color);
-        case 'king': return getKingMoves(row, col, piece.color);
+        case 'king': return getKingMoves(row, col, piece.color, includeCastling);
         default: return [];
     }
 }
@@ -316,8 +316,8 @@ function getQueenMoves(row, col, color) {
     return [...getRookMoves(row, col, color), ...getBishopMoves(row, col, color)];
 }
 
-// King moves (including castling)
-function getKingMoves(row, col, color) {
+// King moves (including castling) - FIX: Added includeCastling parameter
+function getKingMoves(row, col, color, includeCastling = true) {
     const moves = [];
     const offsets = [
         [-1, -1], [-1, 0], [-1, 1],
@@ -337,7 +337,9 @@ function getKingMoves(row, col, color) {
         }
     }
     
-    if (!isKingInCheck(color)) {
+    // Only check castling if we're not in a recursive call
+    if (includeCastling && !isKingInCheck(color)) {
+        // Kingside castling
         if (castlingRights[color].kingSide) {
             if (!board[row][col + 1] && !board[row][col + 2] &&
                 !isSquareAttacked(row, col + 1, color) && !isSquareAttacked(row, col + 2, color)) {
@@ -345,6 +347,7 @@ function getKingMoves(row, col, color) {
             }
         }
         
+        // Queenside castling
         if (castlingRights[color].queenSide) {
             if (!board[row][col - 1] && !board[row][col - 2] && !board[row][col - 3] &&
                 !isSquareAttacked(row, col - 1, color) && !isSquareAttacked(row, col - 2, color)) {
@@ -367,6 +370,7 @@ function isKingInCheck(color) {
     return isSquareAttacked(kingPos.row, kingPos.col, color);
 }
 
+// FIX: Pass includeCastling=false to prevent recursion
 function isSquareAttacked(row, col, defendingColor) {
     const attackingColor = defendingColor === 'white' ? 'black' : 'white';
     
@@ -374,7 +378,8 @@ function isSquareAttacked(row, col, defendingColor) {
         for (let c = 0; c < 8; c++) {
             const piece = board[r][c];
             if (piece && piece.color === attackingColor) {
-                const moves = getPseudoLegalMoves(r, c);
+                // Don't check castling when checking for attacks (prevents recursion)
+                const moves = getPseudoLegalMoves(r, c, false);
                 if (moves.some(move => move.row === row && move.col === col)) {
                     return true;
                 }
@@ -680,7 +685,7 @@ function resetGame() {
     updateDisplay();
 }
 
-// Event listeners - using safe element getting
+// Event listeners
 const newGameBtn = getElement('new-game-btn');
 if (newGameBtn) {
     newGameBtn.addEventListener('click', resetGame);
@@ -700,7 +705,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Also try immediate initialization in case DOMContentLoaded already fired
 if (document.readyState === 'loading') {
-    // Still loading, wait for DOMContentLoaded
+    // Still loading
 } else {
     // DOM is already ready
     initializeBoard();

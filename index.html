@@ -3,50 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Game</title>
+    <title>♟️ Chess Game</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="main.js"></script>
 </head>
 <body>
     <div class="header">
         <h1>♟️ Chess Game</h1>
-    </div>
-
-    <div class="game-info">
-        <div class="turn-indicator">
-            <div class="turn-dot"></div>
-            <span id="turn-display">White to move</span>
+        <div class="game-info">
+            <div class="turn-indicator">
+                <span class="turn-dot"></span>
+                <span>Turn: <strong id="current-turn">White</strong></span>
+            </div>
+            <div id="status-message" class="status-message">Make your move</div>
         </div>
-        <div class="status-message" id="status-message">Game in progress</div>
     </div>
 
     <div class="chess-container">
         <div class="board-container">
-            <div class="chessboard" id="chessboard"></div>
+            <div id="chessboard" class="chessboard"></div>
             <div class="controls">
-                <button class="btn btn--primary" onclick="resetGame()">New Game</button>
-                <button class="btn btn--secondary" onclick="undoMove()">Undo Move</button>
+                <button id="new-game-btn" class="btn btn--primary">New Game</button>
+                <button id="undo-btn" class="btn btn--secondary">Undo Move</button>
             </div>
         </div>
 
         <div class="side-panel">
             <h2>Captured Pieces</h2>
-            <div>
-                <div class="captured-pieces" id="captured-white"></div>
-                <div class="captured-pieces" id="captured-black"></div>
+            <div class="captured-section">
+                <h3>White</h3>
+                <div id="white-captured" class="captured-pieces"></div>
+            </div>
+            <div class="captured-section">
+                <h3>Black</h3>
+                <div id="black-captured" class="captured-pieces"></div>
             </div>
 
-            <h2 style="margin-top: var(--space-24);">Move History</h2>
-            <div class="move-history" id="move-history"></div>
+            <h2>Move History</h2>
+            <div id="move-history" class="move-history"></div>
 
             <div class="ai-section">
                 <h2>AI Opponent</h2>
                 <div class="ai-placeholder">
-                    <p>🤖 AI integration space</p>
-                    <p style="margin-top: var(--space-8);">Connect your chess engine here</p>
+                    🤖 AI integration space<br>
+                    Connect your chess engine here
                 </div>
             </div>
         </div>
     </div>
+    <script src="main.js"></script>
 </body>
 </html>

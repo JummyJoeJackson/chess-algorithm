@@ -4,10 +4,10 @@ An interactive chess game built with HTML, CSS, and JavaScript. Play chess in yo
 
 # Team
 
-Tianze Yin
-Alex Li
-Daniel Zhao
-Diego Gonzalez
+- Tianze Yin
+- Alex Li
+- Daniel Zhao
+- Diego Gonzalez
 
 ## Features
 

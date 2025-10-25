@@ -1,82 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>♟️ Chess vs AI</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="header">
-        <h1>♟️ Chess vs AI</h1>
-        <div class="game-info">
-            <div class="turn-indicator">
-                <span class="turn-dot"></span>
-                <span>Turn: <strong id="current-turn">White</strong></span>
-            </div>
-            <div id="status-message" class="status-message">Select your opponent</div>
-        </div>
-    </div>
-    <div id="ai-options" class="ai-selector" style="display: flex;">
-        <h2>Choose Your Opponent</h2>
-        <div class="ai-buttons">
-            <button id="beginner-btn" class="ai-level-btn beginner">
-                <div class="ai-name">🤖 Beginner</div>
-                <div class="ai-elo">ELO ~800</div>
-                <div class="ai-description">Makes occasional mistakes, good for learning</div>
-            </button>
-            <button id="intermediate-btn" class="ai-level-btn intermediate">
-                <div class="ai-name">🎯 Intermediate</div>
-                <div class="ai-elo">ELO ~1200</div>
-                <div class="ai-description">Solid player, challenging but beatable</div>
-            </button>
-            <button id="advanced-btn" class="ai-level-btn advanced">
-                <div class="ai-name">👑 Advanced</div>
-                <div class="ai-elo">ELO ~1600</div>
-                <div class="ai-description">Strong tactical play, difficult to beat</div>
-            </button>
-        </div>
-    </div>
-    <div id="ai-info" class="ai-current-info" style="display: none;">
-        Playing against: Beginner (ELO ~800)
-    </div>
-
-    <div class="chess-container">
-        <div class="board-container">
-            <div id="chessboard" class="chessboard"></div>
-            <div class="controls">
-                <button id="new-game-btn" class="btn btn--primary">New Game</button>
-                <button id="undo-btn" class="btn btn--secondary">Undo Move</button>
-                <button id="change-ai-btn" class="btn btn--secondary">Change AI</button>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>♟️ Chess vs AI</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div class="header">
+            <h1>♟️ Chess vs AI</h1>
+            <div class="game-info">
+                <div class="turn-indicator">
+                    <span class="turn-dot"></span>
+                    <span>Turn: <strong id="current-turn">White</strong></span>
+                </div>
+                <div id="status-message" class="status-message">Select your opponent</div>
             </div>
         </div>
-
-        <div class="side-panel">
-            <h2>Captured Pieces</h2>
-            <div class="captured-section">
-                <h3>Black (AI)</h3>
-                <div id="white-captured" class="captured-pieces"></div>
+        <div id="ai-options" class="ai-selector" style="display: flex;">
+            <h2>Choose Your Opponent</h2>
+            <div class="ai-buttons">
+                <button id="beginner-btn" class="ai-level-btn beginner">
+                    <div class="ai-name">🤖 Beginner</div>
+                    <div class="ai-elo">ELO ~800</div>
+                    <div class="ai-description">Makes occasional mistakes, good for learning</div>
+                </button>
+                <button id="intermediate-btn" class="ai-level-btn intermediate">
+                    <div class="ai-name">🎯 Intermediate</div>
+                    <div class="ai-elo">ELO ~1200</div>
+                    <div class="ai-description">Solid player, challenging but beatable</div>
+                </button>
+                <button id="advanced-btn" class="ai-level-btn advanced">
+                    <div class="ai-name">👑 Advanced</div>
+                    <div class="ai-elo">ELO ~1600</div>
+                    <div class="ai-description">Strong tactical play, difficult to beat</div>
+                </button>
             </div>
-            <div class="captured-section">
-                <h3>White</h3>
-                <div id="black-captured" class="captured-pieces"></div>
+        </div>
+        <div id="ai-info" class="ai-current-info" style="display: none;">
+            Playing against: Beginner (ELO ~800)
+        </div>
+        <div class="chess-container">
+            <div class="board-container">
+                <div id="chessboard" class="chessboard"></div>
+                <div class="controls">
+                    <button id="new-game-btn" class="btn btn--primary">New Game</button>
+                    <button id="undo-btn" class="btn btn--secondary">Undo Move</button>
+                    <button id="change-ai-btn" class="btn btn--secondary">Change AI</button>
+                </div>
             </div>
-
-            <h2>Move History</h2>
-            <div id="move-history" class="move-history"></div>
-
-            <div class="ai-tips-section">
-                <h2>💡 Tips</h2>
-                <div class="ai-tips">
-                    <p>• You play as <strong>White</strong></p>
-                    <p>• AI plays as <strong>Black</strong></p>
-                    <p>• Click a piece to see valid moves</p>
-                    <p>• Undo removes both your move and AI's response</p>
+            <div class="side-panel">
+                <h2>Captured Pieces</h2>
+                <div class="captured-section">
+                    <h3>Black (AI)</h3>
+                    <div id="white-captured" class="captured-pieces"></div>
+                </div>
+                <div class="captured-section">
+                    <h3>White</h3>
+                    <div id="black-captured" class="captured-pieces"></div>
+                </div>
+                <h2>Move History</h2>
+                <div id="move-history" class="move-history"></div>
+                <div class="ai-tips-section">
+                    <h2>💡 Tips</h2>
+                    <div class="ai-tips">
+                        <p>• You play as <strong>White</strong></p>
+                        <p>• AI plays as <strong>Black</strong></p>
+                        <p>• Click a piece to see valid moves</p>
+                        <p>• Undo removes both your move and AI's response</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <script src="main.js"></script>
-</body>
+        <script src="main.js"></script>
+    </body>
 </html>

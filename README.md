@@ -1,8 +1,8 @@
-# ♟️ Chess Game
+# Chess Game
 
-A modern, interactive chess game built with vanilla HTML, CSS, and JavaScript. Play chess in your browser with a clean, responsive interface and prepare for AI opponent integration.
+An interactive chess game built with HTML, CSS, and JavaScript. Play chess in your browser with a clean, responsive interface and prepare for AI opponent integration.
 
-## 🎮 Features
+## Features
 
 - **Interactive Chessboard** - Click and drag pieces with visual feedback
 - **Valid Move Highlighting** - See all legal moves for selected pieces
@@ -14,7 +14,7 @@ A modern, interactive chess game built with vanilla HTML, CSS, and JavaScript. P
 - **Dark Mode Support** - Automatic theme switching based on system preferences
 - **AI Integration Ready** - Dedicated section prepared for chess engine implementation
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -46,7 +46,7 @@ A modern, interactive chess game built with vanilla HTML, CSS, and JavaScript. P
 3. **Start playing!**
    - Navigate to `http://localhost:8000` in your browser
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **Vercel** - Scalable Project Deployment
 - **HTML5** - Semantic structure
@@ -54,7 +54,7 @@ A modern, interactive chess game built with vanilla HTML, CSS, and JavaScript. P
 - **JavaScript (ES6+)** - Game logic and interactivity
 - **No dependencies** - Pure vanilla JavaScript
 
-## 📝 Future Enhancements
+## Future Enhancements
 
 - [ ] AI opponent integration
 - [ ] Game save/load functionality
@@ -62,7 +62,7 @@ A modern, interactive chess game built with vanilla HTML, CSS, and JavaScript. P
 - [ ] Timer/clock functionality
 - [ ] Move validation improvements
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Feel free to:
 1. Fork the repository
@@ -71,19 +71,9 @@ Contributions are welcome! Feel free to:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
-
-## 👤 Author
-
-Diego Gonzalez - [@JummyJoeJackson](https://github.com/JummyJoeJackson)
-
-## 🙏 Acknowledgments
-
-- Chess piece Unicode symbols
-- Modern design inspiration from Chess.com and Lichess.org
-- Community feedback and contributions
 
 ---
 

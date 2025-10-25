@@ -812,51 +812,49 @@ function updateDisplay() {
 
 function undoMove() {
     if (moveHistory.length === 0) return;
-    
-    // Undo AI move if it was last
+    // Undo AI move if it was last (black)
     if (moveHistory.length > 0 && moveHistory[moveHistory.length - 1].piece.color === 'black') {
         undoSingleMove();
     }
-    
     // Undo player move
-    if (moveHistory.length > 0) {
+    if (moveHistory.length > 0 && moveHistory[moveHistory.length - 1].piece.color === 'white') {
         undoSingleMove();
     }
 }
 
 function undoSingleMove() {
     const lastMove = moveHistory.pop();
-    
+    if (!lastMove) return;
     board[lastMove.from.row][lastMove.from.col] = lastMove.piece;
     board[lastMove.to.row][lastMove.to.col] = lastMove.captured || null;
-    
+
     if (lastMove.enPassant) {
         const color = lastMove.piece.color;
         const captureRow = color === 'white' ? lastMove.to.row + 1 : lastMove.to.row - 1;
         board[captureRow][lastMove.to.col] = lastMove.captured;
         board[lastMove.to.row][lastMove.to.col] = null;
     }
-    
+
     if (lastMove.castling) {
         const isKingSide = lastMove.castling === 'kingside';
         const rookFromCol = isKingSide ? lastMove.to.col - 1 : lastMove.to.col + 1;
         const rookToCol = isKingSide ? 7 : 0;
-        
+
         board[lastMove.to.row][rookToCol] = board[lastMove.to.row][rookFromCol];
         board[lastMove.to.row][rookFromCol] = null;
     }
-    
+
     if (lastMove.promotion) {
         board[lastMove.from.row][lastMove.from.col] = { type: 'pawn', color: lastMove.piece.color };
     }
-    
+
     if (lastMove.piece.type === 'king') {
         kingPositions[lastMove.piece.color] = lastMove.from;
     }
-    
+
     enPassantTarget = lastMove.enPassantTarget;
     castlingRights = lastMove.castlingRights;
-    
+
     if (lastMove.captured) {
         const capturedColor = lastMove.captured.color;
         const index = capturedPieces[capturedColor].lastIndexOf(lastMove.captured.type);
@@ -864,16 +862,18 @@ function undoSingleMove() {
             capturedPieces[capturedColor].splice(index, 1);
         }
     }
-    
+
     currentTurn = currentTurn === 'white' ? 'black' : 'white';
     const turnElement = getElement('current-turn');
     if (turnElement) {
         turnElement.textContent = currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1);
     }
-    
+
     isCheck = false;
     isCheckmate = false;
     isStalemate = false;
+
+    updateDisplay();
 }
 
 function resetGame() {

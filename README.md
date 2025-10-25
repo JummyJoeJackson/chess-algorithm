@@ -12,7 +12,7 @@ An interactive chess game built with HTML, CSS, and JavaScript. Play chess in yo
 - **Undo Functionality** - Revert your last move
 - **Responsive Design** - Works seamlessly on desktop and mobile devices
 - **Dark Mode Support** - Automatic theme switching based on system preferences
-- **AI Integration Ready** - Dedicated section prepared for chess engine implementation
+- **AI Integration** - 3 Difficulties for AI Opponents
 
 ## Getting Started
 
@@ -51,12 +51,11 @@ An interactive chess game built with HTML, CSS, and JavaScript. Play chess in yo
 - **Vercel** - Scalable Project Deployment
 - **HTML5** - Semantic structure
 - **CSS3** - Modern styling with custom properties and grid layout
-- **JavaScript (ES6+)** - Game logic and interactivity
+- **JavaScript** - Game logic and interactivity
 - **No dependencies** - Pure vanilla JavaScript
 
 ## Future Enhancements
 
-- [ ] AI opponent integration
 - [ ] Game save/load functionality
 - [ ] Multiplayer support
 - [ ] Timer/clock functionality

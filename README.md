@@ -2,6 +2,13 @@
 
 An interactive chess game built with HTML, CSS, and JavaScript. Play chess in your browser with a clean, responsive interface and prepare for AI opponent integration.
 
+# Team
+
+Tianze Yin
+Alex Li
+Daniel Zhao
+Diego Gonzalez
+
 ## Features
 
 - **Interactive Chessboard** - Click and drag pieces with visual feedback
@@ -21,8 +28,6 @@ An interactive chess game built with HTML, CSS, and JavaScript. Play chess in yo
 - A modern web browser (Chrome, Firefox, Safari, Edge)
 - A local web server (optional, but recommended for development)
 
-### Access
-- Public Domain: `chess-algorithm-rythm.vercel.app`
 
 ### Installation
 
@@ -42,9 +47,6 @@ An interactive chess game built with HTML, CSS, and JavaScript. Play chess in yo
      # Using Node.js http-server
      npx http-server
      ```
-
-3. **Start playing!**
-   - Navigate to `http://localhost:8000` in your browser
 
 ## Technologies Used
 
@@ -70,10 +72,6 @@ Contributions are welcome! Feel free to:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
 
 ---
 

@@ -1,4 +1,7 @@
-// Chess piece Unicode characters
+// Chess Game with AI Opponents
+// Includes: Beginner (800 ELO), Intermediate (1200 ELO), Advanced (1600 ELO)
+
+// Chess piece symbols
 const PIECES = {
     white: {
         king: '♔',
@@ -18,6 +21,39 @@ const PIECES = {
     }
 };
 
+// Piece values for evaluation
+const PIECE_VALUES = {
+    pawn: 100,
+    knight: 320,
+    bishop: 330,
+    rook: 500,
+    queen: 900,
+    king: 20000
+};
+
+// Position bonus tables (simplified)
+const PAWN_TABLE = [
+    0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5,  5, 10, 25, 25, 10,  5,  5,
+    0,  0,  0, 20, 20,  0,  0,  0,
+    5, -5,-10,  0,  0,-10, -5,  5,
+    5, 10, 10,-20,-20, 10, 10,  5,
+    0,  0,  0,  0,  0,  0,  0,  0
+];
+
+const KNIGHT_TABLE = [
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50
+];
+
 // Game state
 let board = [];
 let selectedSquare = null;
@@ -33,30 +69,32 @@ let kingPositions = { white: null, black: null };
 let isCheck = false;
 let isCheckmate = false;
 let isStalemate = false;
+let selectedAI = null;
+let isAIThinking = false;
 
-// Initialize the board with starting positions
+// AI difficulty settings
+const AI_LEVELS = {
+    beginner: { name: 'Beginner', elo: '~800', depth: 1, randomness: 0.3 },
+    intermediate: { name: 'Intermediate', elo: '~1200', depth: 2, randomness: 0.1 },
+    advanced: { name: 'Advanced', elo: '~1600', depth: 3, randomness: 0 }
+};
+
+// Initialize the board
 function initializeBoard() {
     board = Array(8).fill(null).map(() => Array(8).fill(null));
     
-    // Black pieces (top)
     board[0] = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'].map(piece => ({ type: piece, color: 'black' }));
     board[1] = Array(8).fill(null).map(() => ({ type: 'pawn', color: 'black' }));
-    
-    // White pieces (bottom)
     board[6] = Array(8).fill(null).map(() => ({ type: 'pawn', color: 'white' }));
     board[7] = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'].map(piece => ({ type: piece, color: 'white' }));
     
-    // Track king positions
     kingPositions = { white: { row: 7, col: 4 }, black: { row: 0, col: 4 } };
 }
 
 // Create the visual board
 function createBoard() {
     const chessboard = document.getElementById('chessboard');
-    if (!chessboard) {
-        console.error('Chessboard element not found!');
-        return;
-    }
+    if (!chessboard) return;
     
     chessboard.innerHTML = '';
 
@@ -81,7 +119,6 @@ function createBoard() {
     }
 }
 
-// Safe element getter with fallback
 function getElement(id) {
     const element = document.getElementById(id);
     if (!element) {
@@ -90,9 +127,14 @@ function getElement(id) {
     return element;
 }
 
-// Handle square clicks
+// Handle square clicks (only for white/human player)
 function handleSquareClick(row, col) {
-    if (isCheckmate || isStalemate) return;
+    if (isCheckmate || isStalemate || isAIThinking) return;
+    if (!selectedAI) {
+        showAISelector();
+        return;
+    }
+    if (currentTurn !== 'white') return; // Only human can move
     
     const square = board[row][col];
     
@@ -106,6 +148,11 @@ function handleSquareClick(row, col) {
             switchTurn();
             checkGameState();
             updateDisplay();
+            
+            // AI makes its move after human
+            if (currentTurn === 'black' && !isCheckmate && !isStalemate) {
+                setTimeout(makeAIMove, 500);
+            }
         } else {
             clearSelection();
             if (square && square.color === currentTurn) {
@@ -119,7 +166,6 @@ function handleSquareClick(row, col) {
     }
 }
 
-// Select a square
 function selectSquare(row, col) {
     selectedSquare = { row, col };
     highlightValidMoves(row, col);
@@ -132,7 +178,6 @@ function selectSquare(row, col) {
     });
 }
 
-// Clear selection
 function clearSelection() {
     selectedSquare = null;
     const squares = document.querySelectorAll('.square');
@@ -141,7 +186,6 @@ function clearSelection() {
     });
 }
 
-// Highlight valid moves
 function highlightValidMoves(row, col) {
     const squares = document.querySelectorAll('.square');
     const validMoves = getValidMoves(row, col);
@@ -158,7 +202,179 @@ function highlightValidMoves(row, col) {
     });
 }
 
-// Get valid moves (legal moves that don't leave king in check)
+// AI Move Logic
+function makeAIMove() {
+    if (!selectedAI || currentTurn !== 'black') return;
+    
+    isAIThinking = true;
+    const statusElement = getElement('status-message');
+    if (statusElement) {
+        statusElement.textContent = 'AI is thinking...';
+    }
+    
+    const aiConfig = AI_LEVELS[selectedAI];
+    const bestMove = findBestMove(aiConfig.depth, aiConfig.randomness);
+    
+    if (bestMove) {
+        setTimeout(() => {
+            makeMove(bestMove.from.row, bestMove.from.col, bestMove.to.row, bestMove.to.col);
+            switchTurn();
+            checkGameState();
+            updateDisplay();
+            isAIThinking = false;
+        }, 300);
+    } else {
+        isAIThinking = false;
+    }
+}
+
+// Minimax algorithm with alpha-beta pruning
+function findBestMove(depth, randomness) {
+    const allMoves = getAllPossibleMoves('black');
+    if (allMoves.length === 0) return null;
+    
+    let bestScore = -Infinity;
+    let bestMoves = [];
+    
+    for (const move of allMoves) {
+        const originalBoard = JSON.parse(JSON.stringify(board));
+        const originalKingPos = JSON.parse(JSON.stringify(kingPositions));
+        const originalCastling = JSON.parse(JSON.stringify(castlingRights));
+        const originalEnPassant = enPassantTarget;
+        
+        makeSimulatedMove(move);
+        const score = minimax(depth - 1, -Infinity, Infinity, false);
+        
+        // Restore state
+        board = originalBoard;
+        kingPositions = originalKingPos;
+        castlingRights = originalCastling;
+        enPassantTarget = originalEnPassant;
+        
+        if (score > bestScore) {
+            bestScore = score;
+            bestMoves = [move];
+        } else if (score === bestScore) {
+            bestMoves.push(move);
+        }
+    }
+    
+    // Add randomness for lower difficulty levels
+    if (randomness > 0 && Math.random() < randomness && allMoves.length > 1) {
+        return allMoves[Math.floor(Math.random() * allMoves.length)];
+    }
+    
+    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+}
+
+function minimax(depth, alpha, beta, isMaximizing) {
+    if (depth === 0) {
+        return evaluateBoard();
+    }
+    
+    const color = isMaximizing ? 'black' : 'white';
+    const allMoves = getAllPossibleMoves(color);
+    
+    if (allMoves.length === 0) {
+        if (isKingInCheck(color)) {
+            return isMaximizing ? -10000 : 10000; // Checkmate
+        }
+        return 0; // Stalemate
+    }
+    
+    if (isMaximizing) {
+        let maxScore = -Infinity;
+        for (const move of allMoves) {
+            const originalBoard = JSON.parse(JSON.stringify(board));
+            const originalKingPos = JSON.parse(JSON.stringify(kingPositions));
+            
+            makeSimulatedMove(move);
+            const score = minimax(depth - 1, alpha, beta, false);
+            
+            board = originalBoard;
+            kingPositions = originalKingPos;
+            
+            maxScore = Math.max(maxScore, score);
+            alpha = Math.max(alpha, score);
+            if (beta <= alpha) break;
+        }
+        return maxScore;
+    } else {
+        let minScore = Infinity;
+        for (const move of allMoves) {
+            const originalBoard = JSON.parse(JSON.stringify(board));
+            const originalKingPos = JSON.parse(JSON.stringify(kingPositions));
+            
+            makeSimulatedMove(move);
+            const score = minimax(depth - 1, alpha, beta, true);
+            
+            board = originalBoard;
+            kingPositions = originalKingPos;
+            
+            minScore = Math.min(minScore, score);
+            beta = Math.min(beta, score);
+            if (beta <= alpha) break;
+        }
+        return minScore;
+    }
+}
+
+function evaluateBoard() {
+    let score = 0;
+    
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (!piece) continue;
+            
+            let pieceValue = PIECE_VALUES[piece.type];
+            
+            // Add position bonuses
+            const index = row * 8 + col;
+            if (piece.type === 'pawn') {
+                pieceValue += PAWN_TABLE[piece.color === 'white' ? (7 - row) * 8 + col : index];
+            } else if (piece.type === 'knight') {
+                pieceValue += KNIGHT_TABLE[piece.color === 'white' ? (7 - row) * 8 + col : index];
+            }
+            
+            score += piece.color === 'black' ? pieceValue : -pieceValue;
+        }
+    }
+    
+    // Mobility bonus
+    score += getAllPossibleMoves('black').length * 10;
+    score -= getAllPossibleMoves('white').length * 10;
+    
+    return score;
+}
+
+function getAllPossibleMoves(color) {
+    const moves = [];
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece && piece.color === color) {
+                const validMoves = getValidMoves(row, col);
+                validMoves.forEach(move => {
+                    moves.push({ from: { row, col }, to: move });
+                });
+            }
+        }
+    }
+    return moves;
+}
+
+function makeSimulatedMove(move) {
+    const piece = board[move.from.row][move.from.col];
+    board[move.to.row][move.to.col] = piece;
+    board[move.from.row][move.from.col] = null;
+    
+    if (piece.type === 'king') {
+        kingPositions[piece.color] = move.to;
+    }
+}
+
+// Get valid moves (reusing existing logic)
 function getValidMoves(row, col) {
     const moves = getPseudoLegalMoves(row, col);
     const piece = board[row][col];
@@ -184,7 +400,6 @@ function getValidMoves(row, col) {
     });
 }
 
-// Get pseudo-legal moves (now with flag to prevent recursion)
 function getPseudoLegalMoves(row, col, includeCastling = true) {
     const piece = board[row][col];
     if (!piece) return [];
@@ -200,7 +415,6 @@ function getPseudoLegalMoves(row, col, includeCastling = true) {
     }
 }
 
-// Pawn moves (including en passant)
 function getPawnMoves(row, col, color) {
     const moves = [];
     const direction = color === 'white' ? -1 : 1;
@@ -234,7 +448,6 @@ function getPawnMoves(row, col, color) {
     return moves;
 }
 
-// Rook moves
 function getRookMoves(row, col, color) {
     const moves = [];
     const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
@@ -261,7 +474,6 @@ function getRookMoves(row, col, color) {
     return moves;
 }
 
-// Knight moves
 function getKnightMoves(row, col, color) {
     const moves = [];
     const offsets = [
@@ -284,7 +496,6 @@ function getKnightMoves(row, col, color) {
     return moves;
 }
 
-// Bishop moves
 function getBishopMoves(row, col, color) {
     const moves = [];
     const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -311,12 +522,10 @@ function getBishopMoves(row, col, color) {
     return moves;
 }
 
-// Queen moves
 function getQueenMoves(row, col, color) {
     return [...getRookMoves(row, col, color), ...getBishopMoves(row, col, color)];
 }
 
-// King moves (including castling) - FIX: Added includeCastling parameter
 function getKingMoves(row, col, color, includeCastling = true) {
     const moves = [];
     const offsets = [
@@ -337,9 +546,7 @@ function getKingMoves(row, col, color, includeCastling = true) {
         }
     }
     
-    // Only check castling if we're not in a recursive call
     if (includeCastling && !isKingInCheck(color)) {
-        // Kingside castling
         if (castlingRights[color].kingSide) {
             if (!board[row][col + 1] && !board[row][col + 2] &&
                 !isSquareAttacked(row, col + 1, color) && !isSquareAttacked(row, col + 2, color)) {
@@ -347,7 +554,6 @@ function getKingMoves(row, col, color, includeCastling = true) {
             }
         }
         
-        // Queenside castling
         if (castlingRights[color].queenSide) {
             if (!board[row][col - 1] && !board[row][col - 2] && !board[row][col - 3] &&
                 !isSquareAttacked(row, col - 1, color) && !isSquareAttacked(row, col - 2, color)) {
@@ -370,7 +576,6 @@ function isKingInCheck(color) {
     return isSquareAttacked(kingPos.row, kingPos.col, color);
 }
 
-// FIX: Pass includeCastling=false to prevent recursion
 function isSquareAttacked(row, col, defendingColor) {
     const attackingColor = defendingColor === 'white' ? 'black' : 'white';
     
@@ -378,7 +583,6 @@ function isSquareAttacked(row, col, defendingColor) {
         for (let c = 0; c < 8; c++) {
             const piece = board[r][c];
             if (piece && piece.color === attackingColor) {
-                // Don't check castling when checking for attacks (prevents recursion)
                 const moves = getPseudoLegalMoves(r, c, false);
                 if (moves.some(move => move.row === row && move.col === col)) {
                     return true;
@@ -542,7 +746,7 @@ function updateGameInfo() {
         statusElement.textContent = 'Check!';
         statusElement.className = 'status-message check';
     } else {
-        statusElement.textContent = 'Make your move';
+        statusElement.textContent = currentTurn === 'white' ? 'Your turn' : 'AI is thinking...';
         statusElement.className = 'status-message';
     }
 }
@@ -608,39 +812,49 @@ function updateDisplay() {
 
 function undoMove() {
     if (moveHistory.length === 0) return;
-    
+    // Undo AI move if it was last (black)
+    if (moveHistory.length > 0 && moveHistory[moveHistory.length - 1].piece.color === 'black') {
+        undoSingleMove();
+    }
+    // Undo player move
+    if (moveHistory.length > 0 && moveHistory[moveHistory.length - 1].piece.color === 'white') {
+        undoSingleMove();
+    }
+}
+
+function undoSingleMove() {
     const lastMove = moveHistory.pop();
-    
+    if (!lastMove) return;
     board[lastMove.from.row][lastMove.from.col] = lastMove.piece;
     board[lastMove.to.row][lastMove.to.col] = lastMove.captured || null;
-    
+
     if (lastMove.enPassant) {
         const color = lastMove.piece.color;
         const captureRow = color === 'white' ? lastMove.to.row + 1 : lastMove.to.row - 1;
         board[captureRow][lastMove.to.col] = lastMove.captured;
         board[lastMove.to.row][lastMove.to.col] = null;
     }
-    
+
     if (lastMove.castling) {
         const isKingSide = lastMove.castling === 'kingside';
         const rookFromCol = isKingSide ? lastMove.to.col - 1 : lastMove.to.col + 1;
         const rookToCol = isKingSide ? 7 : 0;
-        
+
         board[lastMove.to.row][rookToCol] = board[lastMove.to.row][rookFromCol];
         board[lastMove.to.row][rookFromCol] = null;
     }
-    
+
     if (lastMove.promotion) {
         board[lastMove.from.row][lastMove.from.col] = { type: 'pawn', color: lastMove.piece.color };
     }
-    
+
     if (lastMove.piece.type === 'king') {
         kingPositions[lastMove.piece.color] = lastMove.from;
     }
-    
+
     enPassantTarget = lastMove.enPassantTarget;
     castlingRights = lastMove.castlingRights;
-    
+
     if (lastMove.captured) {
         const capturedColor = lastMove.captured.color;
         const index = capturedPieces[capturedColor].lastIndexOf(lastMove.captured.type);
@@ -648,17 +862,17 @@ function undoMove() {
             capturedPieces[capturedColor].splice(index, 1);
         }
     }
-    
+
     currentTurn = currentTurn === 'white' ? 'black' : 'white';
     const turnElement = getElement('current-turn');
     if (turnElement) {
         turnElement.textContent = currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1);
     }
-    
+
     isCheck = false;
     isCheckmate = false;
     isStalemate = false;
-    
+
     updateDisplay();
 }
 
@@ -676,6 +890,7 @@ function resetGame() {
     isCheck = false;
     isCheckmate = false;
     isStalemate = false;
+    isAIThinking = false;
     
     const turnElement = getElement('current-turn');
     if (turnElement) {
@@ -685,10 +900,46 @@ function resetGame() {
     updateDisplay();
 }
 
+// AI Selector UI
+function showAISelector() {
+    const aiOptions = getElement('ai-options');
+    if (aiOptions) {
+        aiOptions.style.display = 'flex';
+    }
+}
+
+function selectAI(level) {
+    selectedAI = level;
+    const aiOptions = getElement('ai-options');
+    const aiInfo = getElement('ai-info');
+    
+    if (aiOptions) aiOptions.style.display = 'none';
+    if (aiInfo) {
+        aiInfo.style.display = 'block';
+        aiInfo.textContent = `Playing against: ${AI_LEVELS[level].name} (ELO ${AI_LEVELS[level].elo})`;
+    }
+    
+    updateGameInfo();
+}
+
+function changeAI() {
+    selectedAI = null;
+    const aiOptions = getElement('ai-options');
+    const aiInfo = getElement('ai-info');
+    
+    if (aiOptions) aiOptions.style.display = 'flex';
+    if (aiInfo) aiInfo.style.display = 'none';
+    
+    resetGame();
+}
+
 // Event listeners
 const newGameBtn = getElement('new-game-btn');
 if (newGameBtn) {
-    newGameBtn.addEventListener('click', resetGame);
+    newGameBtn.addEventListener('click', () => {
+        resetGame();
+        showAISelector();
+    });
 }
 
 const undoBtn = getElement('undo-btn');
@@ -696,47 +947,30 @@ if (undoBtn) {
     undoBtn.addEventListener('click', undoMove);
 }
 
+const changeAIBtn = getElement('change-ai-btn');
+if (changeAIBtn) {
+    changeAIBtn.addEventListener('click', changeAI);
+}
+
+// AI difficulty buttons
+['beginner', 'intermediate', 'advanced'].forEach(level => {
+    const btn = getElement(`${level}-btn`);
+    if (btn) {
+        btn.addEventListener('click', () => selectAI(level));
+    }
+});
+
 // Initialize game on load
 window.addEventListener('DOMContentLoaded', () => {
     initializeBoard();
     createBoard();
     updateGameInfo();
+    showAISelector();
 });
 
-// Also try immediate initialization in case DOMContentLoaded already fired
-if (document.readyState === 'loading') {
-    // Still loading
-} else {
-    // DOM is already ready
+if (document.readyState !== 'loading') {
     initializeBoard();
     createBoard();
     updateGameInfo();
+    showAISelector();
 }
-
-// ============================================
-// AI INTEGRATION PLACEHOLDER
-// ============================================
-// To integrate your chess AI, implement the following function:
-//
-// function makeAIMove() {
-//     // 1. Get all legal moves for the current player (black/AI)
-//     const allMoves = [];
-//     for (let row = 0; row < 8; row++) {
-//         for (let col = 0; col < 8; col++) {
-//             const piece = board[row][col];
-//             if (piece && piece.color === currentTurn) {
-//                 const moves = getValidMoves(row, col);
-//                 moves.forEach(move => {
-//                     allMoves.push({ from: { row, col }, to: move });
-//                 });
-//             }
-//         }
-//     }
-//     
-//     // 2. Evaluate positions using your chess engine
-//     // 3. Select the best move
-//     // 4. Execute: makeMove(bestMove.from.row, bestMove.from.col, bestMove.to.row, bestMove.to.col)
-// }
-//
-// Then call makeAIMove() after each player move when it's the AI's turn
-// ============================================

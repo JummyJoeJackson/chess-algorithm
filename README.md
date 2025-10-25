@@ -2,6 +2,10 @@
 
 An interactive chess game built with HTML, CSS, and JavaScript. Play chess in your browser with a clean, responsive interface and prepare for AI opponent integration.
 
+## Authors
+
+- Aliex Li, Daniel Zhao, Tianze Yin, Diego Gonzalez
+
 ## Features
 
 - **Interactive Chessboard** - Click and drag pieces with visual feedback
